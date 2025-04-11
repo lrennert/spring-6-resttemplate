@@ -2,6 +2,7 @@ package guru.springframework.spring6resttemplate.client;
 
 import guru.springframework.spring6resttemplate.model.BeerDTO;
 import guru.springframework.spring6resttemplate.model.BeerDTOPageImpl;
+import guru.springframework.spring6resttemplate.model.BeerStyle;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.data.domain.Page;
@@ -19,13 +20,35 @@ public class BeerClientImpl implements BeerClient {
     private final RestTemplateBuilder restTemplateBuilder;
 
     @Override
-    public Page<BeerDTO> listBeers(String beerName) {
+    public Page<BeerDTO> listBeers() {
+        return listBeers(null, null, null, null, null);
+    }
+
+    @Override
+    public Page<BeerDTO> listBeers(String beerName, BeerStyle beerStyle, Boolean showInventory,
+                                   Integer pageNumber, Integer pageSize) {
         RestTemplate restTemplate = restTemplateBuilder.build();
 
         UriComponentsBuilder builder = UriComponentsBuilder.fromPath(GET_BEER_PATH);
 
         if (beerName != null) {
             builder.queryParam("beerName", beerName);
+        }
+
+        if (beerStyle != null) {
+            builder.queryParam("beerStyle", beerStyle);
+        }
+
+        if (showInventory != null) {
+            builder.queryParam("showInventory", showInventory);
+        }
+
+        if (pageNumber != null) {
+            builder.queryParam("pageNumber", pageNumber);
+        }
+
+        if (pageSize != null) {
+            builder.queryParam("pageSize", pageSize);
         }
 
         ResponseEntity<BeerDTOPageImpl> response = restTemplate.getForEntity(
