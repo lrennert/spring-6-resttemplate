@@ -19,8 +19,10 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.math.BigDecimal;
+import java.net.URI;
 import java.util.Collections;
 import java.util.UUID;
 
@@ -29,6 +31,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestToUriTemplate;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withAccepted;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 @RestClientTest
@@ -57,6 +60,25 @@ public class BeerClientMockTest {
         server = MockRestServiceServer.bindTo(restTemplate).build();
         when(restTemplateBuilderMock.build()).thenReturn(restTemplate);
         beerClient = new BeerClientImpl(restTemplateBuilderMock);
+    }
+
+    @Test
+    void testCreateBeer() throws JsonProcessingException {
+        BeerDTO beerDTO = getBeerDto();
+        String payload = objectMapper.writeValueAsString(beerDTO);
+        URI uri = UriComponentsBuilder.fromPath(BeerClientImpl.GET_BEER_BY_ID_PATH)
+                .build(beerDTO.getId());
+
+        server.expect(method(HttpMethod.POST))
+                .andExpect(requestTo(URL + BeerClientImpl.GET_BEER_PATH))
+                .andRespond(withAccepted().location(uri));
+
+        server.expect(method(HttpMethod.GET))
+                .andExpect(requestToUriTemplate(URL + BeerClientImpl.GET_BEER_BY_ID_PATH, beerDTO.getId()))
+                .andRespond(withSuccess(payload, MediaType.APPLICATION_JSON));
+
+        BeerDTO result = beerClient.createBeer(beerDTO);
+        assertThat(result.getId()).isEqualTo(beerDTO.getId());
     }
 
     @Test
